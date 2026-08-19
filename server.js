@@ -47,7 +47,7 @@ async function initDatabase() {
 // DISCORD
 // ============================================================
 
-async function sendDiscord(message) {
+async function sendDiscord(currentTime, nextTime) {
 
     const response = await fetch(DISCORD_WEBHOOK_URL, {
         method: "POST",
@@ -57,7 +57,40 @@ async function sendDiscord(message) {
         },
 
         body: JSON.stringify({
-            content: message
+            embeds: [
+                {
+                    title: "🟢 Regis Detectado!",
+                    description:
+                        "Os Regis foram detectados e o próximo ciclo foi estimado.",
+                    
+                    color: 5763719,
+
+                    fields: [
+                        {
+                            name: "🕐 Horário detectado",
+                            value: `**${currentTime}**`,
+                            inline: true
+                        },
+                        {
+                            name: "⏰ Próximo spawn",
+                            value: `**${nextTime}**`,
+                            inline: true
+                        },
+                        {
+                            name: "⚔️ Ordem padrão",
+                            value:
+                                "Terrakion → Cobalion → Virizion",
+                            inline: false
+                        }
+                    ],
+
+                    footer: {
+                        text: "OTP Online Tracker"
+                    },
+
+                    timestamp: new Date().toISOString()
+                }
+            ]
         })
     });
 
@@ -257,7 +290,10 @@ app.post("/regi/detected", async (req, res) => {
 
         try {
 
-            await sendDiscord(message);
+            await sendDiscord(
+                currentText,
+                nextText
+            );
 
         } catch (discordError) {
 
