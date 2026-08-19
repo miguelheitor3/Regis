@@ -1,3 +1,3 @@
 #!/bin/bash
-python regi_backend.py
+python3 regi_backend.py
 
