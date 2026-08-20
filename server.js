@@ -7,7 +7,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+
 const CYCLE_MINUTES = 61;
+const LOCK_MINUTES = 30;
 
 if (!process.env.DATABASE_URL) {
     console.error("ERRO: DATABASE_URL não configurada.");
@@ -42,6 +44,7 @@ async function initDatabase() {
     console.log("[DB] Banco inicializado.");
 }
 
+
 // ============================================================
 // RESETAR CICLO DO REGI
 // ============================================================
@@ -75,6 +78,7 @@ app.post("/regi/reset", async (req, res) => {
 
 });
 
+
 // ============================================================
 // DISCORD
 // ============================================================
@@ -94,7 +98,7 @@ async function sendDiscord(currentTime, nextTime) {
                     title: "🟢 Regis Detectado!",
                     description:
                         "Os Regis foram detectados e o próximo ciclo foi estimado.",
-                    
+
                     color: 5763719,
 
                     fields: [
@@ -231,14 +235,20 @@ app.post("/regi/detected", async (req, res) => {
                 new Date(result.rows[0].detected_at);
 
 
+            // =================================================
+            // BLOQUEIO DE NOVA DETECÇÃO
+            // =================================================
+            // O bloqueio dura 30 minutos.
+            // =================================================
+
             const nextSpawn = new Date(
                 lastDetected.getTime() +
-                CYCLE_MINUTES * 60 * 1000
+                LOCK_MINUTES * 60 * 1000
             );
 
 
             // =================================================
-            // AINDA ESTÁ NO MESMO CICLO
+            // AINDA ESTÁ NO BLOQUEIO
             // =================================================
 
             if (now < nextSpawn) {
@@ -255,7 +265,12 @@ app.post("/regi/detected", async (req, res) => {
                         formatTime(lastDetected),
 
                     next_estimate:
-                        formatTime(nextSpawn)
+                        formatTime(
+                            new Date(
+                                lastDetected.getTime() +
+                                CYCLE_MINUTES * 60 * 1000
+                            )
+                        )
 
                 });
 
@@ -291,6 +306,9 @@ app.post("/regi/detected", async (req, res) => {
 
         // ====================================================
         // CALCULA PRÓXIMO REGIS
+        // ====================================================
+        // O próximo Regis continua sendo estimado para
+        // 61 minutos depois da detecção.
         // ====================================================
 
         const nextSpawn = new Date(
