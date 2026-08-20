@@ -42,6 +42,38 @@ async function initDatabase() {
     console.log("[DB] Banco inicializado.");
 }
 
+// ============================================================
+// RESETAR CICLO DO REGI
+// ============================================================
+
+app.post("/regi/reset", async (req, res) => {
+
+    try {
+
+        await pool.query(`
+            DELETE FROM regi_state
+            WHERE id = 1
+        `);
+
+        console.log("[REGI] Ciclo resetado manualmente.");
+
+        return res.json({
+            reset: true,
+            message: "Ciclo do Regis resetado com sucesso."
+        });
+
+    } catch (error) {
+
+        console.error("[REGI RESET]", error);
+
+        return res.status(500).json({
+            reset: false,
+            error: "backend_error"
+        });
+
+    }
+
+});
 
 // ============================================================
 // DISCORD
